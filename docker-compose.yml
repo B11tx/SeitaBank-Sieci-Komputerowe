@@ -1,0 +1,114 @@
+services:
+  nginx_proxy:
+    image: nginx:1.25-alpine
+    container_name: seitabank_nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - seitabank_web
+    networks:
+      dmz_net:
+        ipv4_address: 172.29.1.10
+
+  seitabank_web:
+    build: ./app
+    container_name: seitabank_app
+    restart: always
+    environment:
+      - DB_HOST=mariadb
+      - DB_USER=seitabank_user
+      - DB_PASS=SeitaPass2026!
+      - DB_NAME=seitabank_db
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      dmz_net:
+        ipv4_address: 172.29.1.20
+      backend_net:
+        ipv4_address: 172.29.2.20
+
+  mariadb:
+    image: mariadb:10.11
+    container_name: seitabank_db
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=RootSeitaSecret2026!
+      - MARIADB_DATABASE=seitabank_db
+      - MARIADB_USER=seitabank_user
+      - MARIADB_PASSWORD=SeitaPass2026!
+    volumes:
+      - seitabank_db_data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+    networks:
+      backend_net:
+        ipv4_address: 172.29.2.30
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: seitabank_pma
+    restart: always
+    ports:
+      - "127.0.0.1:8081:80"
+    environment:
+      - PMA_HOST=mariadb
+      - PMA_USER=root
+      - PMA_PASSWORD=RootSeitaSecret2026!
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      backend_net:
+        ipv4_address: 172.29.2.40
+
+  honeypot_fake_login:
+    image: php:8.2-apache
+    container_name: seitabank_honeypot
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./honeypot/src:/var/www/html:ro
+      - ./logs/honeypot:/var/log/honeypot
+    networks:
+      dmz_net:
+        ipv4_address: 172.29.1.50
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: seitabank_portainer
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - seitabank_portainer_data:/data
+    networks:
+      dmz_net:
+        ipv4_address: 172.29.1.99
+
+networks:
+  dmz_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.1.0/24
+  backend_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.2.0/24
+
+volumes:
+  seitabank_db_data:
+  seitabank_portainer_data:
