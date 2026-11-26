@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS seitabank_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE seitabank_db;
 
--- 1. Tabela publicznych oddziałów banku (widoczna na stronie głównej bez logowania)
+
 CREATE TABLE branches (
     id INT AUTO_INCREMENT PRIMARY KEY,
     branch_code VARCHAR(16) NOT NULL UNIQUE,
@@ -12,7 +12,7 @@ CREATE TABLE branches (
     branch_type ENUM('Oddział Korporacyjny', 'Oddział Detaliczny', 'Centrum Private Banking') DEFAULT 'Oddział Detaliczny'
 ) ENGINE=InnoDB;
 
--- 2. Tabela użytkowników i rachunków bankowych
+
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(64) NOT NULL UNIQUE,
@@ -26,7 +26,7 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- 3. Tabela transakcji bankowych (15 000 rekordów - dostępna wyłącznie po zalogowaniu!)
+
 CREATE TABLE transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sender_iban VARCHAR(34) NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE transactions (
     INDEX idx_tx_date (tx_date)
 ) ENGINE=InnoDB;
 
--- 4. Tabela logów audytowych bezpieczeństwa
+
 CREATE TABLE audit_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(64),
@@ -51,7 +51,7 @@ CREATE TABLE audit_logs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Wstawienie danych oddziałów SeitaBank S.A.
+
 INSERT INTO branches (branch_code, city, address, phone, hours, branch_type) VALUES
 ('SB-WAW-01', 'Warszawa', 'ul. Rondo ONZ 1 (Centrala)', '+48 22 500 10 00', 'Pn-Pt: 08:00 - 18:00', 'Oddział Korporacyjny'),
 ('SB-KRK-01', 'Kraków', 'al. Pokoju 5', '+48 12 400 20 10', 'Pn-Pt: 09:00 - 17:00', 'Oddział Korporacyjny'),
@@ -62,13 +62,7 @@ INSERT INTO branches (branch_code, city, address, phone, hours, branch_type) VAL
 ('SB-LOD-01', 'Łódź', 'al. Piłsudskiego 22', '+48 42 200 70 60', 'Pn-Pt: 09:00 - 17:00', 'Oddział Detaliczny'),
 ('SB-SZC-01', 'Szczecin', 'Brama Portowa 1', '+48 91 900 80 70', 'Pn-Pt: 09:00 - 16:30', 'Oddział Detaliczny');
 
--- Wstawienie głównych kont użytkowników (Hasła w MD5):
--- 1. admin        | hasło: password123 (482c811da5d5b4bc6d497ffa98491e38)
--- 2. m.kowalski   | hasło: qwerty      (d8578edf8458ce06fbc5bb76a58c5ca4)
--- 3. a.nowak      | hasło: 123456      (e10adc3949ba59abbe56e057f20f883e)
--- 4. k.wisniewski | hasło: letmein     (0d107d09f5bbe40cade3de5c71e9e9b7)
--- 5. p.zielinski  | hasło: iloveyou    (4c25b32a72699ed712dff00c709d2c59)
--- 6. zarzad_vip   | hasło: secret      (5ebe2294ecd0e0f08eab7690d2a6ee69)
+
 
 INSERT INTO users (username, password_hash, full_name, role, iban, balance, email, pesel) VALUES
 ('admin', '482c811da5d5b4bc6d497ffa98491e38', 'Główny Administrator SeitaBank', 'admin', 'PL61109010140000071219810001', 9450000.00, 'admin@seitabank.pl', '80010112345'),
@@ -84,7 +78,7 @@ BEGIN
     DECLARE i INT DEFAULT 7;
     DECLARE j INT DEFAULT 1;
     
-    -- Generowanie 94 dodatkowych klientów (łącznie 100 kont w bazie)
+    
     WHILE i <= 100 DO
         INSERT INTO users (username, password_hash, full_name, role, iban, balance, email, pesel)
         VALUES (
@@ -100,7 +94,7 @@ BEGIN
         SET i = i + 1;
     END WHILE;
 
-    -- Generowanie 15 000 transakcji bankowych
+   
     WHILE j <= 15000 DO
         INSERT INTO transactions (sender_iban, receiver_iban, receiver_name, title, amount, status, tx_date)
         VALUES (
